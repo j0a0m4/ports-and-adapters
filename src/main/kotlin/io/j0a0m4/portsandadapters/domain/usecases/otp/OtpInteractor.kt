@@ -3,13 +3,14 @@ package io.j0a0m4.portsandadapters.domain.usecases.otp
 import io.j0a0m4.portsandadapters.domain.model.*
 import io.j0a0m4.portsandadapters.domain.usecases.contact.ContactUseCases
 import org.springframework.stereotype.Service
+import java.util.*
 
 typealias VerificationCode = Int
 
 @Service
 class OtpInteractor(
-	val phoneSender: Sender<Phone>,
-	val emailSender: Sender<Email>,
+	val phoneOtpSender: OtpSender<Phone>,
+	val emailOtpSender: OtpSender<Email>,
 	val contactPort: ContactUseCases
 ) : OtpUseCases {
 	val newCode: VerificationCode
@@ -17,12 +18,11 @@ class OtpInteractor(
 			.shuffled()
 			.first()
 
-	override fun execute(command: SendOtpCommand) = with(command) {
-		contactPort.findBy(id).onSuccess {
+	override fun send(contactId: UUID, sendMethod: SendMethod) =
+		contactPort.findBy(contactId).onSuccess {
 			when (sendMethod) {
-				SendMethod.Phone -> phoneSender.run { newCode sendTo it.phone }
-				SendMethod.Email -> emailSender.run { newCode sendTo it.email }
+				SendMethod.Phone -> phoneOtpSender.run { newCode sendTo it.phone }
+				SendMethod.Email -> emailOtpSender.run { newCode sendTo it.email }
 			}
 		}
-	}
 }

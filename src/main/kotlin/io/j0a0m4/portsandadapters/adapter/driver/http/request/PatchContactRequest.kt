@@ -6,5 +6,5 @@ import org.springframework.web.reactive.function.server.awaitBody
 
 data class PatchContactRequest(val status: VerifiedStatus)
 
-suspend fun ServerRequest.newStatus() =
+suspend fun ServerRequest.parseStatus() =
 	awaitBody<PatchContactRequest>().status
