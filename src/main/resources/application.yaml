@@ -1,0 +1,12 @@
+spring:
+  task:
+    execution:
+      pool:
+        queue-capacity: 10
+        core-size: 4
+        max-size: 8
+        keep-alive: 60s
+        allow-core-thread-timeout: on
+      shutdown:
+        await-termination: on
+        await-termination-period: 30s
