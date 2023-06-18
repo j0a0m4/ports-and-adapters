@@ -3,6 +3,7 @@ package io.j0a0m4.portsandadapters.domain.usecases.otp
 import io.j0a0m4.portsandadapters.domain.model.SendMethod
 import io.j0a0m4.portsandadapters.domain.model.VerifiedStatus
 import io.j0a0m4.portsandadapters.domain.usecases.contact.ContactUseCases
+import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -12,30 +13,30 @@ typealias VerificationCode = Int
 class OtpInteractor(
 	val sender: OtpSender,
 	val storage: OtpStorage,
-	val contactPort: ContactUseCases
+	val contactPort: ContactUseCases,
+	val async: AsyncTaskExecutor,
 ) : OtpUseCases {
-	override fun send(contactId: UUID, method: SendMethod) =
-		contactPort.findBy(contactId)
-			.map { OtpRecord(it, method) }
-			.mapCatching {
-				storage.persist(it)
-				sender.send(it)
-			}
-
-	override fun verify(contactId: UUID, method: SendMethod, otp: VerificationCode) =
-		storage.verify(contactId, method, otp)
-			.map { it.toStatus() }
-			.onSuccess { handleInvalidation(it, contactId, method) }
-
-	private fun handleInvalidation(status: VerifiedStatus, contactId: UUID, method: SendMethod) {
-		if (status == VerifiedStatus.Verified) {
-			storage.invalidate(contactId, method)
+	override fun send(contactId: UUID, method: SendMethod) {
+		async.execute {
+			contactPort.findBy(contactId)
+				.map { OtpRecord(it, method) }
+				.mapCatching {
+					storage persist it
+					sender send it
+				}.onSuccess { contactPort.pending(contactId) }
 		}
 	}
-}
 
-private fun Boolean.toStatus() =
-	when (this) {
-		true -> VerifiedStatus.Verified
-		else -> VerifiedStatus.Unverified
-	}
+	override fun verify(contactId: UUID, method: SendMethod, otp: VerificationCode) =
+		storage.retrieve(contactId, method).map {
+			when (it == otp) {
+				true -> handleVerified(contactId, method)
+				else -> VerifiedStatus.Unverified
+			}
+		}.map { status -> contactPort.updateStatus(contactId, status) }
+
+	private fun handleVerified(contactId: UUID, method: SendMethod) =
+		VerifiedStatus.Verified.also {
+			storage.invalidate(contactId, method)
+		}
+}

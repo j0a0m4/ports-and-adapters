@@ -7,24 +7,23 @@ import java.util.*
 
 @Repository
 class InMemoryContactStorage() : ContactStorage, MutableMap<UUID, Contact> by HashMap() {
-	override infix fun persist(contact: Contact) = run {
+	override infix fun persist(contact: Contact) {
 		this[contact.id] = contact
 	}
 
-	override fun update(pair: Pair<UUID, VerifiedStatus>) = pair
-		.let { (contactId, newStatus) -> updateStatus(contactId, newStatus) }
+	override fun update(contactId: UUID, status: VerifiedStatus) =
+		updateStatus(contactId, status)
 
 	override fun findBy(contactId: UUID): Result<Contact> = get(contactId).let {
 		if (it != null) {
 			Result.success(it)
 		} else {
-			Result.failure(NoSuchElementException("UUID [$contactId] not found"))
+			Result.failure(NoSuchElementException("UUID ($contactId) not found"))
 		}
 	}
 
 	private fun updateStatus(contactId: UUID, newStatus: VerifiedStatus) =
-		findBy(contactId).map { contact ->
-			contact.patch { verifiedStatus = newStatus }
-				.also { this[contactId] = it }
-		}
+		findBy(contactId)
+			.map { it.patch { verifiedStatus = newStatus } }
+			.onSuccess { this[contactId] = it }
 }

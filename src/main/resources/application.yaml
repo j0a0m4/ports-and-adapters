@@ -10,3 +10,9 @@ spring:
       shutdown:
         await-termination: on
         await-termination-period: 30s
+logging:
+  level:
+    root: info
+    org:
+      springframework:
+        web: trace

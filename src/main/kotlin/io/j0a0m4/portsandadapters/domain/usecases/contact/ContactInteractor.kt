@@ -11,8 +11,9 @@ class ContactInteractor(val storage: ContactStorage) : ContactUseCases {
 		contact.apply { storage persist this }
 			.run { Result.success(id) }
 
-	override fun updateStatus(contactId: UUID, newStatus: VerifiedStatus) =
+	override fun updateStatus(contactId: UUID, newStatus: VerifiedStatus) {
 		storage update (contactId to newStatus)
+	}
 
 	override fun findBy(contactId: UUID) = storage findBy contactId
 }

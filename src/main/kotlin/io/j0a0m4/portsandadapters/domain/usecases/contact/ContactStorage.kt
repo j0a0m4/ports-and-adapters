@@ -6,6 +6,9 @@ import java.util.*
 
 interface ContactStorage {
 	infix fun persist(contact: Contact)
-	infix fun update(pair: Pair<UUID, VerifiedStatus>): Result<Contact>
+	fun update(contactId: UUID, status: VerifiedStatus): Result<Contact>
 	infix fun findBy(contactId: UUID): Result<Contact>
+	infix fun update(pair: Pair<UUID, VerifiedStatus>) {
+		update(pair.first, pair.second)
+	}
 }

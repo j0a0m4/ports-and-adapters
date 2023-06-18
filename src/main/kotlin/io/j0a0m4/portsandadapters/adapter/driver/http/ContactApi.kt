@@ -1,52 +1,38 @@
 package io.j0a0m4.portsandadapters.adapter.driver.http
 
 import io.j0a0m4.portsandadapters.adapter.driver.http.request.*
+import io.j0a0m4.portsandadapters.adapter.driver.http.response.FailureHandler
 import io.j0a0m4.portsandadapters.domain.usecases.contact.ContactUseCases
 import io.j0a0m4.portsandadapters.domain.usecases.otp.OtpUseCases
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.web.reactive.function.server.*
-import java.util.*
-
-
-fun ServerRequest.parseId(): UUID =
-	UUID.fromString(pathVariable("id"))
-
-infix fun ServerRequest.locationOf(id: UUID) = uriBuilder()
-	.path("/{id}")
-	.build(id.toString())
 
 @Configuration
 class ContactApi {
+
 	@Bean
 	fun otpRoutes(
 		otpPort: OtpUseCases,
 		contactPort: ContactUseCases,
-		async: AsyncTaskExecutor
+		failureHandler: FailureHandler
 	) = coRouter {
 		"/api/contact".nest {
 			accept(APPLICATION_JSON).nest {
-				POST("/{id}/otp") { request ->
-					val contactId = request.parseId()
-					val sendMethod = request.parseMethod()
-					async.execute {
-						otpPort.send(contactId, sendMethod)
-							.onSuccess { _ -> contactPort.pending(contactId) }
-							.onFailure { _ -> contactPort.unverified(contactId) }
-					}
+				POST("/{id}/otp") {
+					val contactId = it.parseId()
+					val method = it.parseMethod()
+					otpPort.send(contactId, method)
 					ServerResponse.accepted().buildAndAwait()
 				}
 				PATCH("/{id}") { request ->
 					val contactId = request.parseId()
 					request.parseVerification().run {
 						otpPort.verify(contactId, method, otp)
-					}.map { status ->
-						contactPort.updateStatus(contactId, status)
 					}.fold(
 						onSuccess = { ServerResponse.noContent() },
-						onFailure = { ServerResponse.notFound() }
+						onFailure = { failureHandler(it) }
 					).buildAndAwait()
 				}
 			}
@@ -54,21 +40,24 @@ class ContactApi {
 	}
 
 	@Bean
-	fun contactRoutes(contactPort: ContactUseCases) = coRouter {
+	fun contactRoutes(
+		contactPort: ContactUseCases,
+		failureHandler: FailureHandler
+	) = coRouter {
 		"/api".nest {
 			accept(APPLICATION_JSON).nest {
 				POST("/contact") { request ->
 					val contact = request.parseContact()
 					contactPort.add(contact).fold(
 						onSuccess = { id -> ServerResponse.created(request locationOf id) },
-						onFailure = { ServerResponse.badRequest() }
+						onFailure = { failureHandler(it) }
 					).buildAndAwait()
 				}
 				GET("/contact/{id}") { request ->
 					val contactId = request.parseId()
 					contactPort.findBy(contactId).fold(
 						onSuccess = { contact -> ServerResponse.ok().bodyValueAndAwait(contact) },
-						onFailure = { ServerResponse.notFound().buildAndAwait() }
+						onFailure = { failureHandler(it).buildAndAwait() }
 					)
 				}
 			}

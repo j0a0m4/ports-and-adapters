@@ -42,4 +42,7 @@ val String.splitName: Name
 		Name(first(), last())
 	}
 
-infix fun Contact.by(sendMethod: SendMethod) = Triple(phone, email, sendMethod)
+operator fun Contact.get(method: SendMethod) = when (method) {
+	SendMethod.Email -> email
+	SendMethod.Phone -> phone
+}

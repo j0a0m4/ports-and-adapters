@@ -11,15 +11,15 @@ class InMemoryOtpStorage : OtpStorage, MutableMap<Pair<UUID, SendMethod>, Verifi
 		this += record.toMap()
 	}
 
-	override fun verify(key: Pair<UUID, SendMethod>, value: VerificationCode) =
+	override fun retrieve(key: Pair<UUID, SendMethod>) =
 		when (key in this) {
-			true -> Result.success(this[key] == value)
-			else -> Result.failure(NoSuchElementException("Key [ $key ] not found"))
+			false -> Result.failure(NoSuchElementException("Key $key not found"))
+			true -> Result.success(this[key])
 		}
 
 	override fun invalidate(key: Pair<UUID, SendMethod>) =
 		when (val value = remove(key)) {
-			null -> Result.failure(NoSuchElementException("Key [ $key ] not found"))
+			null -> Result.failure(NoSuchElementException("Key $key not found"))
 			else -> Result.success(value)
 		}
 }

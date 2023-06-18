@@ -6,7 +6,7 @@ import java.util.*
 
 interface ContactUseCases {
 	fun add(contact: Contact): Result<UUID>
-	fun updateStatus(contactId: UUID, newStatus: VerifiedStatus): Result<Contact>
+	fun updateStatus(contactId: UUID, newStatus: VerifiedStatus)
 	fun findBy(contactId: UUID): Result<Contact>
 
 	fun pending(contactId: UUID) {
