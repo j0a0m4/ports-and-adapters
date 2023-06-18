@@ -45,6 +45,7 @@ tasks.withType<KotlinCompile> {
 }
 
 testlogger {
+	showSimpleNames = true
 	theme = ThemeType.MOCHA_PARALLEL
 }
 
