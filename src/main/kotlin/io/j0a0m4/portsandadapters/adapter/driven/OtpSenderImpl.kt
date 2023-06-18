@@ -10,6 +10,6 @@ class OtpSenderImpl() : OtpSender {
 	private val logger = LoggerFactory.getLogger(javaClass)
 	override fun send(record: OtpRecord) {
 		// TODO: Implement integration
-		logger.info("[ Handle ${javaClass.name} ] otp(${record.otp}) method(${record.method})")
+		logger.info("[ ${javaClass.simpleName} ] sent ${record.otp} to ${record.method}")
 	}
 }

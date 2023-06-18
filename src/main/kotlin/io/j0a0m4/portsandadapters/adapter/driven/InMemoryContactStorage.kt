@@ -1,5 +1,6 @@
 package io.j0a0m4.portsandadapters.adapter.driven
 
+import io.j0a0m4.portsandadapters.adapter.NoSuchUUID
 import io.j0a0m4.portsandadapters.domain.model.*
 import io.j0a0m4.portsandadapters.domain.usecases.ContactStorage
 import org.springframework.stereotype.Repository
@@ -18,7 +19,7 @@ class InMemoryContactStorage() : ContactStorage, MutableMap<UUID, Contact> by Ha
 		if (it != null) {
 			Result.success(it)
 		} else {
-			Result.failure(NoSuchElementException("UUID ($contactId) not found"))
+			Result.failure(NoSuchUUID(contactId))
 		}
 	}
 

@@ -25,13 +25,10 @@ class OtpInteractor(
 	}
 
 	override fun verify(contactId: UUID, method: SendMethod, otp: VerificationCode) =
-		storage.retrieve(contactId, method).mapCatching {
-			if (it != otp) {
-				throw IllegalArgumentException("Invalid OTP provided")
+		storage.retrieveOtp(contactId, method)
+			.mapCatching { if (it != otp) throw OtpMismatch() }
+			.onSuccess {
+				contactPort.verified(contactId)
+				storage.invalidate(contactId, method)
 			}
-		}.onSuccess {
-			contactPort.verified(contactId)
-			storage.invalidate(contactId, method)
-		}
-
 }

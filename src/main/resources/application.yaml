@@ -15,4 +15,4 @@ logging:
     root: info
     org:
       springframework:
-        web: trace
+        web: info
