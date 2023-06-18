@@ -1,0 +1,18 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@ccb4328a959376b642e027874838f60f8e596de3
+
+      - name: Build the Docker image
+        run: docker build . --file Dockerfile.test --tag my-image-name:$(date +%s)
