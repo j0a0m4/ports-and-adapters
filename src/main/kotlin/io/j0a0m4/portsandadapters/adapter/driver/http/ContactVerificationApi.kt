@@ -22,9 +22,9 @@ class ContactVerificationApi {
 	) = coRouter {
 		"/api/contact".nest {
 			accept(APPLICATION_JSON).nest {
-				POST("/{id}/otp") {
-					val contactId = it.parseId()
-					val method = it.parseMethod()
+				POST("/{id}/otp") { request ->
+					val contactId = request.parseId()
+					val method = request.parseMethod()
 					otpPort.send(contactId, method)
 					ServerResponse.accepted().buildAndAwait()
 				}
@@ -34,7 +34,7 @@ class ContactVerificationApi {
 						otpPort.verify(contactId, method, otp)
 					}.fold(
 						onSuccess = { ServerResponse.noContent() },
-						onFailure = { failureHandler(it) }
+						onFailure = { exception -> failureHandler(exception) }
 					).buildAndAwait()
 				}
 			}
@@ -51,19 +51,19 @@ class ContactVerificationApi {
 				POST("/contact") { request ->
 					val contact = request.parseContact()
 					contactPort.add(contact)
-						.map { request locationOf it }
+						.map { id -> request locationOf id }
 						.fold(
-							onSuccess = { ServerResponse.created(it) },
-							onFailure = { failureHandler(it) }
+							onSuccess = { location -> ServerResponse.created(location) },
+							onFailure = { exception -> failureHandler(exception) }
 						).buildAndAwait()
 				}
 				GET("/contact/{id}") { request ->
 					val contactId = request.parseId()
 					contactPort.findBy(contactId)
-						.map { it.toResponse }
+						.map { contact -> contact.toResponse }
 						.fold(
-							onSuccess = { ServerResponse.ok().bodyValueAndAwait(it) },
-							onFailure = { failureHandler(it).buildAndAwait() }
+							onSuccess = { responseBody -> ServerResponse.ok().bodyValueAndAwait(responseBody) },
+							onFailure = { exception -> failureHandler(exception).buildAndAwait() }
 						)
 				}
 			}
