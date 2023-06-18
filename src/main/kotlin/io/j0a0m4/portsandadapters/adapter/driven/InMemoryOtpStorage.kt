@@ -12,5 +12,14 @@ class InMemoryOtpStorage : OtpStorage, MutableMap<Pair<UUID, SendMethod>, Verifi
 	}
 
 	override fun verify(key: Pair<UUID, SendMethod>, value: VerificationCode) =
-		this[key] == value
+		when (key in this) {
+			true -> Result.success(this[key] == value)
+			else -> Result.failure(NoSuchElementException("Key [ $key ] not found"))
+		}
+
+	override fun invalidate(key: Pair<UUID, SendMethod>) =
+		when (val value = remove(key)) {
+			null -> Result.failure(NoSuchElementException("Key [ $key ] not found"))
+			else -> Result.success(value)
+		}
 }

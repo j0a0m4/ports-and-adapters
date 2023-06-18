@@ -23,9 +23,19 @@ class OtpInteractor(
 			}
 
 	override fun verify(contactId: UUID, method: SendMethod, otp: VerificationCode) =
-		if (storage.verify(contactId, method, otp)) {
-			Result.success(VerifiedStatus.Verified)
-		} else {
-			Result.success(VerifiedStatus.Unverified)
+		storage.verify(contactId, method, otp)
+			.map { it.toStatus() }
+			.onSuccess { handleInvalidation(it, contactId, method) }
+
+	private fun handleInvalidation(status: VerifiedStatus, contactId: UUID, method: SendMethod) {
+		if (status == VerifiedStatus.Verified) {
+			storage.invalidate(contactId, method)
 		}
+	}
 }
+
+private fun Boolean.toStatus() =
+	when (this) {
+		true -> VerifiedStatus.Verified
+		else -> VerifiedStatus.Unverified
+	}

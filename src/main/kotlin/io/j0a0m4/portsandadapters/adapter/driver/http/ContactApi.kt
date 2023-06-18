@@ -21,7 +21,11 @@ infix fun ServerRequest.locationOf(id: UUID) = uriBuilder()
 @Configuration
 class ContactApi {
 	@Bean
-	fun otpRoutes(otpPort: OtpUseCases, contactPort: ContactUseCases, async: AsyncTaskExecutor) = coRouter {
+	fun otpRoutes(
+		otpPort: OtpUseCases,
+		contactPort: ContactUseCases,
+		async: AsyncTaskExecutor
+	) = coRouter {
 		"/api/contact".nest {
 			accept(APPLICATION_JSON).nest {
 				POST("/{id}/otp") { request ->
