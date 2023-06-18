@@ -13,7 +13,7 @@ group = "io.j0a0m4"
 version = "0.0.1-SNAPSHOT"
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_17
+	sourceCompatibility = JavaVersion.VERSION_11
 }
 
 repositories {
