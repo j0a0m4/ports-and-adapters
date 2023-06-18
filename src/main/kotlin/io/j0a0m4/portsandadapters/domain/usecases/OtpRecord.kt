@@ -1,7 +1,6 @@
-package io.j0a0m4.portsandadapters.domain.usecases.otp
+package io.j0a0m4.portsandadapters.domain.usecases
 
-import io.j0a0m4.portsandadapters.domain.model.Contact
-import io.j0a0m4.portsandadapters.domain.model.SendMethod
+import io.j0a0m4.portsandadapters.domain.model.*
 import java.util.*
 
 data class OtpRecord(val contact: Contact, val method: SendMethod) {

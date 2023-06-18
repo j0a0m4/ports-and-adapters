@@ -10,10 +10,10 @@ class FailureHandler() {
 	val logger: Logger = LoggerFactory.getLogger(javaClass)
 
 	operator fun invoke(e: Throwable) =
-		if (e is NoSuchElementException) {
-			ServerResponse.notFound()
-		} else {
-			ServerResponse.badRequest()
+		when (e) {
+			is NoSuchElementException   -> ServerResponse.notFound()
+			is IllegalArgumentException -> ServerResponse.unprocessableEntity()
+			else                        -> ServerResponse.badRequest()
 		}.also {
 			logger.warn("[ Handle ${e.javaClass.name} ] ${e.message}")
 		}

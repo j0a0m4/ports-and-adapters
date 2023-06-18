@@ -1,13 +1,10 @@
-package io.j0a0m4.portsandadapters.domain.usecases.otp
+package io.j0a0m4.portsandadapters.domain.usecases
 
 import io.j0a0m4.portsandadapters.domain.model.SendMethod
-import io.j0a0m4.portsandadapters.domain.model.VerifiedStatus
-import io.j0a0m4.portsandadapters.domain.usecases.contact.ContactUseCases
+import io.j0a0m4.portsandadapters.domain.model.VerificationCode
 import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.stereotype.Service
 import java.util.*
-
-typealias VerificationCode = Int
 
 @Service
 class OtpInteractor(
@@ -28,15 +25,13 @@ class OtpInteractor(
 	}
 
 	override fun verify(contactId: UUID, method: SendMethod, otp: VerificationCode) =
-		storage.retrieve(contactId, method).map {
-			when (it == otp) {
-				true -> handleVerified(contactId, method)
-				else -> VerifiedStatus.Unverified
+		storage.retrieve(contactId, method).mapCatching {
+			if (it != otp) {
+				throw IllegalArgumentException("Invalid OTP provided")
 			}
-		}.map { status -> contactPort.updateStatus(contactId, status) }
-
-	private fun handleVerified(contactId: UUID, method: SendMethod) =
-		VerifiedStatus.Verified.also {
+		}.onSuccess {
+			contactPort.verified(contactId)
 			storage.invalidate(contactId, method)
 		}
+
 }

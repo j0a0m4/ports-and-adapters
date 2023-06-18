@@ -1,7 +1,7 @@
 package io.j0a0m4.portsandadapters.adapter.driven
 
 import io.j0a0m4.portsandadapters.domain.model.*
-import io.j0a0m4.portsandadapters.domain.usecases.contact.ContactStorage
+import io.j0a0m4.portsandadapters.domain.usecases.ContactStorage
 import org.springframework.stereotype.Repository
 import java.util.*
 

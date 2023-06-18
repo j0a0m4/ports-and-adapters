@@ -1,4 +1,4 @@
-package io.j0a0m4.portsandadapters.domain.usecases.contact
+package io.j0a0m4.portsandadapters.domain.usecases
 
 import io.j0a0m4.portsandadapters.domain.model.Contact
 import io.j0a0m4.portsandadapters.domain.model.VerifiedStatus
@@ -12,8 +12,7 @@ interface ContactUseCases {
 	fun pending(contactId: UUID) {
 		updateStatus(contactId, VerifiedStatus.Pending)
 	}
-
-	fun unverified(contactId: UUID) {
-		updateStatus(contactId, VerifiedStatus.Unverified)
+	fun verified(contactId: UUID) {
+		updateStatus(contactId, VerifiedStatus.Verified)
 	}
 }

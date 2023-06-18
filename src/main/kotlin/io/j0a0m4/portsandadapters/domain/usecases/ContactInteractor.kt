@@ -1,4 +1,4 @@
-package io.j0a0m4.portsandadapters.domain.usecases.contact
+package io.j0a0m4.portsandadapters.domain.usecases
 
 import io.j0a0m4.portsandadapters.domain.model.Contact
 import io.j0a0m4.portsandadapters.domain.model.VerifiedStatus
