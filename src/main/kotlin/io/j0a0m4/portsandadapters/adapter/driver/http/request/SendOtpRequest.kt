@@ -5,7 +5,7 @@ import io.j0a0m4.portsandadapters.domain.model.SendMethod
 import org.springframework.web.reactive.function.server.ServerRequest
 
 fun ServerRequest.parseMethod(): SendMethod =
-	queryParam("method")
+	queryParam("sendMethod")
 		.map { SendMethod from it }
 		.orElseThrow()
 

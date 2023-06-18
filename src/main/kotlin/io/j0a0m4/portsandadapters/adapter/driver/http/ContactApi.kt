@@ -34,6 +34,17 @@ class ContactApi {
 					}
 					ServerResponse.accepted().buildAndAwait()
 				}
+				PATCH("/{id}") { request ->
+					val contactId = request.parseId()
+					request.parseVerification().run {
+						otpPort.verify(contactId, method, otp)
+					}.map { status ->
+						contactPort.updateStatus(contactId, status)
+					}.fold(
+						onSuccess = { ServerResponse.noContent() },
+						onFailure = { ServerResponse.notFound() }
+					).buildAndAwait()
+				}
 			}
 		}
 	}
@@ -44,28 +55,17 @@ class ContactApi {
 			accept(APPLICATION_JSON).nest {
 				POST("/contact") { request ->
 					val contact = request.parseContact()
-					val result = contactPort.add(contact)
-					result.fold(
+					contactPort.add(contact).fold(
 						onSuccess = { id -> ServerResponse.created(request locationOf id) },
 						onFailure = { ServerResponse.badRequest() }
 					).buildAndAwait()
 				}
 				GET("/contact/{id}") { request ->
 					val contactId = request.parseId()
-					val result = contactPort.findBy(contactId)
-					result.fold(
+					contactPort.findBy(contactId).fold(
 						onSuccess = { contact -> ServerResponse.ok().bodyValueAndAwait(contact) },
 						onFailure = { ServerResponse.notFound().buildAndAwait() }
 					)
-				}
-				PATCH("/contact/{id}") { request ->
-					val contactId = request.parseId()
-					val newStatus = request.parseStatus()
-					val result = contactPort.updateStatus(contactId, newStatus)
-					result.fold(
-						onSuccess = { ServerResponse.noContent() },
-						onFailure = { ServerResponse.notFound() }
-					).buildAndAwait()
 				}
 			}
 		}
