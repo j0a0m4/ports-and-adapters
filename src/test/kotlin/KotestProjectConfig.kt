@@ -6,11 +6,12 @@ import io.kotest.core.test.TestCaseOrder
 import io.kotest.extensions.spring.SpringExtension
 
 class KotestProjectConfig: AbstractProjectConfig() {
-	override fun extensions() = listOf(SpringExtension)
-	override val parallelism = 8
-	override val assertionMode = AssertionMode.Warn
-	override val testNameCase = TestNameCase.Sentence
+	override val parallelism = 4
 	override val testNameRemoveWhitespace = true
-	override val specExecutionOrder = SpecExecutionOrder.Lexicographic
+	override val testNameCase = TestNameCase.Sentence
 	override val testCaseOrder = TestCaseOrder.Lexicographic
+	override val specExecutionOrder = SpecExecutionOrder.Lexicographic
+	override val assertionMode = AssertionMode.Warn
+
+	override fun extensions() = listOf(SpringExtension)
 }
