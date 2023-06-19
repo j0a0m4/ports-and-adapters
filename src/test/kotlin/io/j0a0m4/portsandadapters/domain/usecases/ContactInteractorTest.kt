@@ -8,8 +8,7 @@ import io.kotest.data.forAll
 import io.kotest.data.row
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
-import io.mockk.every
-import io.mockk.mockk
+import io.mockk.*
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -19,9 +18,9 @@ import org.springframework.context.annotation.Bean
 @SpringBootTest
 class ContactInteractorTest : FeatureSpec() {
 	@TestConfiguration
-	class ApiTestConfig {
+	class ContactInteractorTestConfig {
 		@Bean
-		fun storage() = mockk<ContactStorage>()
+		fun storage() = mockk<ContactStorage>(relaxed = true)
 	}
 
 	@Autowired
@@ -30,26 +29,31 @@ class ContactInteractorTest : FeatureSpec() {
 	@Autowired
 	private lateinit var storage: ContactStorage
 
+	private val contact = contact {
+		it.name = "Dustin Kensrue"
+		it.email = "dustin@thrice.org"
+		it.phone = "+1923543194"
+	}
+
 	init {
-		val contact = contact {
-			it.name = "Dustin Kensrue"
-			it.email = "dustin@thrice.org"
-			it.phone = "+1923543194"
+		afterTest {
+			clearMocks(storage)
 		}
 
 		feature("add contact") {
-			scenario("should persist to storage") {
-				every { storage.persist(contact) } answers {}
-			}
-			scenario("and should return new UUID") {
+			scenario("should persist to storage and return new UUID") {
 				assertDoesNotThrow {
 					interactor.add(contact) shouldBeSuccess contact.id
+				}
+				verify(exactly = 1) {
+					storage persist contact
 				}
 			}
 		}
 
 		feature("update contact status by id") {
 			every { storage.update(any()) } answers { Result.success(contact) }
+
 			scenario("should persist to storage") {
 				forAll(
 					row(VerifiedStatus.Verified),
@@ -60,18 +64,33 @@ class ContactInteractorTest : FeatureSpec() {
 						interactor.updateStatus(contact.id, status)
 					}
 				}
+
+				verify(exactly = 3) {
+					storage update (any())
+				}
 			}
 		}
 
 		feature("find contact by id") {
 			scenario("should find contact") {
 				every { storage.findBy(contact.id) } answers { Result.success(contact) }
+
 				interactor.findBy(contact.id) shouldBeSuccess contact
+
+				verify(exactly = 1) {
+					storage.findBy(contact.id)
+				}
 			}
 			scenario("id is not found") {
 				val exception = NoSuchUUID(contact.id)
+
 				every { storage.findBy(contact.id) } answers { Result.failure(exception) }
+
 				interactor.findBy(contact.id) shouldBeFailure exception
+
+				verify(exactly = 1) {
+					storage.findBy(contact.id)
+				}
 			}
 		}
 	}
