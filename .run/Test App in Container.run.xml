@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Test App in Container" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
+    <deployment type="dockerfile">
+      <settings>
+        <option name="containerName" value="" />
+        <option name="sourceFilePath" value="Dockerfile.test" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>
