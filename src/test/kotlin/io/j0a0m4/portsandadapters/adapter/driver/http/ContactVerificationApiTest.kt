@@ -9,18 +9,15 @@ import io.j0a0m4.portsandadapters.domain.model.contact
 import io.j0a0m4.portsandadapters.domain.usecases.*
 import io.kotest.core.spec.style.BehaviorSpec
 import io.mockk.*
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType.APPLICATION_JSON
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.util.*
 
-@ExtendWith(SpringExtension::class)
 @WebFluxTest(ContactVerificationApi::class)
 internal class ContactVerificationApiTest() : BehaviorSpec() {
 
