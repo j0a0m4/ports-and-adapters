@@ -1,5 +1,6 @@
-package io.j0a0m4.portsandadapters.adapter.driver.http
+package io.j0a0m4.portsandadapters.adapter.driver.http.handlers
 
+import io.j0a0m4.portsandadapters.adapter.driver.http.Failure
 import io.j0a0m4.portsandadapters.adapter.driver.http.request.*
 import io.j0a0m4.portsandadapters.adapter.driver.http.response.*
 import io.j0a0m4.portsandadapters.domain.usecases.ContactUseCases

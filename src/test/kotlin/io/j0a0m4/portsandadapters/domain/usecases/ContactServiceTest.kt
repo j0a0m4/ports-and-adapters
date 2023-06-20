@@ -13,8 +13,7 @@ import io.mockk.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.*
 
 class ContactServiceTest : ContactServiceTestSpec() {
 	init {
@@ -91,6 +90,7 @@ class ContactServiceTest : ContactServiceTestSpec() {
 @TestConfiguration
 class ContactServiceTestConfig {
 	@Bean
+	@Primary
 	fun repository() = mockk<ContactRepository>(relaxed = true)
 }
 

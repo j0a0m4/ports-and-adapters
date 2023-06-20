@@ -1,5 +1,6 @@
 package io.j0a0m4.portsandadapters.adapter.driver.http
 
+import io.j0a0m4.portsandadapters.adapter.driver.http.handlers.*
 import io.j0a0m4.portsandadapters.adapter.driver.http.request.AddContactRequest
 import io.j0a0m4.portsandadapters.adapter.driver.http.request.PatchContactRequest
 import io.j0a0m4.portsandadapters.adapter.driver.http.response.toResponse
@@ -11,7 +12,7 @@ import io.mockk.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
 import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.*
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -19,32 +20,8 @@ import org.springframework.web.reactive.function.server.*
 import java.net.URI
 import java.util.*
 
-@WebFluxTest(Routes::class)
-internal class ContactVerificationApiTest() : BehaviorSpec() {
-
-	@TestConfiguration
-	class ApiTestConfig {
-		@Bean
-		fun otpHandlers() = mockk<OtpHandlers>(relaxed = true)
-
-		@Bean
-		fun contactHandlers() = mockk<ContactHandlers>()
-	}
-
-	@Autowired
-	private lateinit var client: WebTestClient
-
-	@Autowired
-	private lateinit var otpHandlers: OtpHandlers
-
-	@Autowired
-	private lateinit var contactHandlers: ContactHandlers
-
+class RoutesTest() : RoutesTestSpec() {
 	init {
-		afterTest {
-			clearMocks(otpHandlers, contactHandlers)
-		}
-
 		Given("a POST request to /api/contact") {
 			val request = client.post().uri("/api/contact")
 
@@ -190,6 +167,36 @@ internal class ContactVerificationApiTest() : BehaviorSpec() {
 						.expectBody().isEmpty
 				}
 			}
+		}
+	}
+}
+
+@TestConfiguration
+class RoutesTestConfig {
+	@Bean
+	@Primary
+	fun otpHandlers() = mockk<OtpHandlers>(relaxed = true)
+
+	@Bean
+	@Primary
+	fun contactHandlers() = mockk<ContactHandlers>()
+}
+
+@Import(RoutesTestConfig::class)
+@WebFluxTest(Routes::class)
+open class RoutesTestSpec : BehaviorSpec() {
+	@Autowired
+	lateinit var client: WebTestClient
+
+	@Autowired
+	lateinit var otpHandlers: OtpHandlers
+
+	@Autowired
+	lateinit var contactHandlers: ContactHandlers
+
+	init {
+		afterTest {
+			clearMocks(otpHandlers, contactHandlers)
 		}
 	}
 }

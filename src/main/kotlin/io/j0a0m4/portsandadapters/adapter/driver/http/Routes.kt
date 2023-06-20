@@ -1,10 +1,11 @@
 package io.j0a0m4.portsandadapters.adapter.driver.http
 
+import io.j0a0m4.portsandadapters.adapter.driver.http.handlers.ContactHandlers
+import io.j0a0m4.portsandadapters.adapter.driver.http.handlers.OtpHandlers
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.web.reactive.function.server.coRouter
-
 
 @Configuration
 class Routes {
