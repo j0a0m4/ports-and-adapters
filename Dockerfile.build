@@ -7,4 +7,4 @@ RUN ["./gradlew", "--version"]
 
 FROM GRADLE
 COPY . .
-ENTRYPOINT [ "./gradlew", "build", "--exclude-task", "test", "--stacktrace", "--no-daemon", "--parallel"]
+RUN [ "./gradlew", "build", "--exclude-task", "test", "--stacktrace", "--no-daemon", "--parallel"]

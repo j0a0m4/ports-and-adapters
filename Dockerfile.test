@@ -10,4 +10,4 @@ COPY . .
 RUN ["./gradlew", "clean"]
 
 FROM BUILDER
-ENTRYPOINT [ "./gradlew", "test", "--stacktrace", "--no-daemon", "--parallel"]
+RUN [ "./gradlew", "test", "--stacktrace", "--no-daemon", "--parallel"]
