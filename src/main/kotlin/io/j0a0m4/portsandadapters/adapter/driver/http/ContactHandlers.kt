@@ -1,15 +1,15 @@
 package io.j0a0m4.portsandadapters.adapter.driver.http
 
 import io.j0a0m4.portsandadapters.adapter.driver.http.request.*
-import io.j0a0m4.portsandadapters.adapter.driver.http.response.toResponse
+import io.j0a0m4.portsandadapters.adapter.driver.http.response.*
 import io.j0a0m4.portsandadapters.domain.usecases.ContactUseCases
 import org.springframework.stereotype.Controller
-import org.springframework.web.reactive.function.server.*
+import org.springframework.web.reactive.function.server.ServerRequest
 
 @Controller
 class ContactHandlers(
 	val contactPort: ContactUseCases,
-	val failureHandler: FailureHandler
+	val handleFailure: Failure.Handler
 ) {
 
 	suspend fun createOne(request: ServerRequest) =
@@ -19,13 +19,8 @@ class ContactHandlers(
 			contactPort add contact
 		}.map { id ->
 			request locationOf id
-		}.run {
-			fold(
-				onSuccess = { ServerResponse.created(it) },
-				onFailure = failureHandler::invoke
-			)
-		}.run {
-			buildAndAwait()
+		}.createdOrElse {
+			handleFailure(it)
 		}
 
 	suspend fun getOne(request: ServerRequest) =
@@ -35,10 +30,7 @@ class ContactHandlers(
 			contactPort findBy contactId
 		}.map { contact ->
 			contact.toResponse
-		}.run {
-			fold(
-				onSuccess = { ServerResponse.ok().bodyValueAndAwait(it) },
-				onFailure = { failureHandler(it).buildAndAwait() }
-			)
+		}.okOrElse {
+			handleFailure(it)
 		}
 }
