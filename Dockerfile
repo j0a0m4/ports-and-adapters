@@ -1,15 +1,16 @@
-FROM eclipse-temurin:19.0.2_7-jdk-alpine as gradle
-RUN apk add --no-cache gradle
+FROM eclipse-temurin:19.0.2_7-jdk-alpine as GRADLE
+COPY *.gradle gradle.* gradlew /src/
+COPY gradle /src/gradle
+WORKDIR /src
+RUN ["./gradlew", "--version"]
 
-FROM gradle as builder
-USER root
-ENV APP_HOME=/builder
-WORKDIR $APP_HOME
-COPY . $APP_HOME
-RUN gradle build --exclude-task test --stacktrace --no-daemon --no-build-cache --parallel
+FROM GRADLE as BUILDER
+VOLUME /tmp
+WORKDIR /src
+COPY . .
+RUN [ "./gradlew", "build", "--exclude-task", "test", "--stacktrace", "--no-daemon", "--parallel"]
 
 FROM eclipse-temurin:19.0.2_7-jre-alpine
-WORKDIR /app
-expose 8080
-COPY --from=builder "/builder/build/libs/ports-and-adapters-0.0.1-SNAPSHOT.jar" .
-CMD ["java", "-jar", "ports-and-adapters-0.0.1-SNAPSHOT.jar"]
+COPY --from=BUILDER ports-and-adapters-0.0.1-SNAPSHOT.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]

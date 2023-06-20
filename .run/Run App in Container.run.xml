@@ -2,7 +2,8 @@
   <configuration default="false" name="Run App in Container" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
     <deployment type="dockerfile">
       <settings>
-        <option name="containerName" value="" />
+        <option name="imageTag" value="ports-and-adapters-run" />
+        <option name="containerName" value="ports-and-adapters-run" />
         <option name="portBindings">
           <list>
             <DockerPortBindingImpl>
