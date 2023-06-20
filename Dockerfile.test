@@ -5,9 +5,6 @@ COPY gradle /src/gradle
 WORKDIR /src
 RUN ["./gradlew", "--version"]
 
-FROM GRADLE as BUILDER
+FROM GRADLE
 COPY . .
-RUN ["./gradlew", "clean"]
-
-FROM BUILDER
 RUN [ "./gradlew", "test", "--stacktrace", "--no-daemon", "--parallel"]
