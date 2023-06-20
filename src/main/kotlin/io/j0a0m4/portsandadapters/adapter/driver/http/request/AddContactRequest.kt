@@ -6,7 +6,7 @@ import org.springframework.web.reactive.function.server.awaitBody
 
 data class AddContactRequest(val name: String, val email: String, val phone: String)
 
-suspend fun ServerRequest.parseContact() =
+suspend fun ServerRequest.toContact() =
 	awaitBody<AddContactRequest>().run {
 		contact {
 			it.name = name

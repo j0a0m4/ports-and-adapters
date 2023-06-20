@@ -1,9 +1,8 @@
 package io.j0a0m4.portsandadapters.adapter.driver.http
 
-import io.j0a0m4.portsandadapters.adapter.NoSuchOtpKey
-import io.j0a0m4.portsandadapters.adapter.NoSuchUUID
 import io.j0a0m4.portsandadapters.adapter.driver.http.request.AddContactRequest
 import io.j0a0m4.portsandadapters.adapter.driver.http.request.PatchContactRequest
+import io.j0a0m4.portsandadapters.adapter.driver.http.response.toResponse
 import io.j0a0m4.portsandadapters.domain.model.SendMethod
 import io.j0a0m4.portsandadapters.domain.model.contact
 import io.j0a0m4.portsandadapters.domain.usecases.*
@@ -16,32 +15,34 @@ import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.web.reactive.function.server.*
+import java.net.URI
 import java.util.*
 
-@WebFluxTest(ContactVerificationApi::class)
+@WebFluxTest(Routes::class)
 internal class ContactVerificationApiTest() : BehaviorSpec() {
 
 	@TestConfiguration
 	class ApiTestConfig {
 		@Bean
-		fun otpPort() = mockk<OtpUseCases>(relaxed = true)
+		fun otpHandlers() = mockk<OtpHandlers>(relaxed = true)
 
 		@Bean
-		fun contactPort() = mockk<ContactUseCases>()
+		fun contactHandlers() = mockk<ContactHandlers>()
 	}
 
 	@Autowired
 	private lateinit var client: WebTestClient
 
 	@Autowired
-	private lateinit var otpPort: OtpUseCases
+	private lateinit var otpHandlers: OtpHandlers
 
 	@Autowired
-	private lateinit var contactPort: ContactUseCases
+	private lateinit var contactHandlers: ContactHandlers
 
 	init {
 		afterTest {
-			clearMocks(otpPort, contactPort)
+			clearMocks(otpHandlers, contactHandlers)
 		}
 
 		Given("a POST request to /api/contact") {
@@ -54,7 +55,13 @@ internal class ContactVerificationApiTest() : BehaviorSpec() {
 					"+44219847529"
 				)
 				val contactId = UUID.randomUUID()
-				every { contactPort.add(any()) } returns Result.success(contactId)
+
+				coEvery {
+					contactHandlers.createOne(any())
+				} coAnswers {
+					val uri = URI("/api/contact/$contactId")
+					ServerResponse.created(uri).buildAndAwait()
+				}
 
 				Then("it returns status <201 CREATED> and the location of the resource in the header") {
 					request.bodyValue(payload)
@@ -67,16 +74,20 @@ internal class ContactVerificationApiTest() : BehaviorSpec() {
 			}
 		}
 		Given("a GET request to /api/contact/{id}") {
-			val contactId = UUID.randomUUID()
-			val request = client.get().uri("/api/contact/$contactId")
+			val request = client.get().uri("/api/contact/${UUID.randomUUID()}")
 
 			When("the contact id is found") {
-				every { contactPort.findBy(contactId) } returns
-					Result.success(contact {
+				coEvery {
+					contactHandlers.getOne(any())
+				} coAnswers {
+					val response = contact {
 						it.name = "Jonny Greenwood"
 						it.email = "greenwood@radiohead.co.uk"
 						it.phone = "+44217742329"
-					})
+					}.toResponse
+
+					ServerResponse.ok().bodyValueAndAwait(response)
+				}
 
 				Then("it returns status <200 OK> and payload in body") {
 					request.accept(APPLICATION_JSON)
@@ -94,8 +105,11 @@ internal class ContactVerificationApiTest() : BehaviorSpec() {
 			}
 
 			When("the contact id is not found") {
-				every { contactPort.findBy(contactId) } returns
-					Result.failure(NoSuchUUID(contactId))
+				coEvery {
+					contactHandlers.getOne(any())
+				} coAnswers {
+					ServerResponse.notFound().buildAndAwait()
+				}
 
 				Then("it returns status <404 NOT_FOUND> and empty body") {
 					request.accept(APPLICATION_JSON)
@@ -112,6 +126,11 @@ internal class ContactVerificationApiTest() : BehaviorSpec() {
 			val request = client.post().uri(uri)
 
 			When("send method query param is present") {
+				coEvery {
+					otpHandlers.createOne(any())
+				} coAnswers {
+					ServerResponse.accepted().buildAndAwait()
+				}
 
 				Then("it should return status <201 ACCEPTED> and empty body") {
 					request.accept(APPLICATION_JSON)
@@ -125,12 +144,16 @@ internal class ContactVerificationApiTest() : BehaviorSpec() {
 			val contactId = UUID.randomUUID()
 			val sendMethod = SendMethod.Phone
 			val otp = 423891
+			val body = PatchContactRequest(sendMethod, otp)
 			val request = client.patch().uri("/api/contact/$contactId")
-				.bodyValue(PatchContactRequest(sendMethod, otp))
+				.bodyValue(body)
 
 			When("it verifies given OTP matches with stored OTP value") {
-				every { otpPort.verify(contactId, sendMethod, otp) } returns
-					Result.success(Unit)
+				coEvery {
+					otpHandlers.verifyOne(any())
+				} coAnswers {
+					ServerResponse.noContent().buildAndAwait()
+				}
 
 				Then("it should return status <204 NO_CONTENT> and empty body") {
 					request.accept(APPLICATION_JSON)
@@ -140,8 +163,11 @@ internal class ContactVerificationApiTest() : BehaviorSpec() {
 				}
 			}
 			When("it verifies given OTP does not match with stored OTP value") {
-				every { otpPort.verify(contactId, sendMethod, otp) } returns
-					Result.failure(OtpMismatch())
+				coEvery {
+					otpHandlers.verifyOne(any())
+				} coAnswers {
+					ServerResponse.unprocessableEntity().buildAndAwait()
+				}
 
 				Then("it should return status <422 UNPROCESSABLE_ENTITY> and empty body") {
 					request.accept(APPLICATION_JSON)
@@ -151,8 +177,11 @@ internal class ContactVerificationApiTest() : BehaviorSpec() {
 				}
 			}
 			When("given OTP key is not found") {
-				every { otpPort.verify(contactId, sendMethod, otp) } returns
-					Result.failure(NoSuchOtpKey(contactId to sendMethod))
+				coEvery {
+					otpHandlers.verifyOne(any())
+				} coAnswers {
+					ServerResponse.notFound().buildAndAwait()
+				}
 
 				Then("it should return status <404 NOT_FOUND> and empty body") {
 					request.accept(APPLICATION_JSON)

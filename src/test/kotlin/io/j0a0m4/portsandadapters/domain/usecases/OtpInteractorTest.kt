@@ -1,6 +1,9 @@
 package io.j0a0m4.portsandadapters.domain.usecases
 
+import io.j0a0m4.portsandadapters.domain.OtpMismatch
 import io.j0a0m4.portsandadapters.domain.model.*
+import io.j0a0m4.portsandadapters.domain.usecases.dependencies.OtpRepository
+import io.j0a0m4.portsandadapters.domain.usecases.dependencies.Sender
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.result.shouldBeSuccess
 import io.mockk.*
@@ -15,10 +18,10 @@ class OtpInteractorTest : FeatureSpec() {
 	@TestConfiguration
 	class OtpInteractorTestConfig {
 		@Bean
-		fun storage() = mockk<OtpStorage>(relaxed = true)
+		fun storage() = mockk<OtpRepository>(relaxed = true)
 
 		@Bean
-		fun sender() = mockk<OtpSender>(relaxed = true)
+		fun sender() = mockk<Sender>(relaxed = true)
 
 		@Bean
 		fun contactPort() = mockk<ContactUseCases>(relaxed = true)
@@ -28,10 +31,10 @@ class OtpInteractorTest : FeatureSpec() {
 	}
 
 	@Autowired
-	private lateinit var storage: OtpStorage
+	private lateinit var storage: OtpRepository
 
 	@Autowired
-	private lateinit var sender: OtpSender
+	private lateinit var sender: Sender
 
 	@Autowired
 	private lateinit var contactPort: ContactUseCases
@@ -40,7 +43,7 @@ class OtpInteractorTest : FeatureSpec() {
 	private lateinit var async: AsyncTaskExecutor
 
 	@Autowired
-	private lateinit var interactor: OtpInteractor
+	private lateinit var interactor: OtpService
 
 	private val contact = contact {
 		it.name = "Apashe"
@@ -64,7 +67,7 @@ class OtpInteractorTest : FeatureSpec() {
 				interactor.verify(contact.id, sendMethod, otp) shouldBeSuccess Unit
 
 				verifyOrder {
-					contactPort.verified(contact.id)
+					contactPort.setToVerified(contact.id)
 					storage.invalidate(contact.id, sendMethod)
 				}
 			}
@@ -76,7 +79,7 @@ class OtpInteractorTest : FeatureSpec() {
 				interactor.verify(contact.id, sendMethod, otp)
 
 				verify(inverse = true) {
-					contactPort.verified(contact.id)
+					contactPort.setToVerified(contact.id)
 					storage.invalidate(contact.id, sendMethod)
 				}
 			}

@@ -7,5 +7,7 @@ import org.springframework.web.reactive.function.server.awaitBody
 
 data class PatchContactRequest(val method: SendMethod, val otp: VerificationCode)
 
-suspend fun ServerRequest.parseVerification() =
-	awaitBody<PatchContactRequest>()
+suspend fun ServerRequest.toVerifyOtpCommand()=
+	awaitBody<PatchContactRequest>().run {
+		Triple(pathId, method, otp)
+	}

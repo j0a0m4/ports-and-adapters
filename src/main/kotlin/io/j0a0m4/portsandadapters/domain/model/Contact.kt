@@ -17,12 +17,12 @@ interface ContactBuilder {
 	var verifiedStatus: VerifiedStatus
 }
 
-fun Contact.patch(block: ContactBuilder.() -> Unit) =
+fun Contact.update(block: ContactBuilder.() -> Unit) =
 	object : ContactBuilder {
-		override var name = this@patch.name.full
-		override var email = this@patch.email.value
-		override var phone = this@patch.phone.value
-		override var verifiedStatus = this@patch.verifiedStatus
+		override var name = this@update.name.full
+		override var email = this@update.email.value
+		override var phone = this@update.phone.value
+		override var verifiedStatus = this@update.verifiedStatus
 	}.apply(block).run {
 		Contact(name.splitName, Email(email), Phone(phone), verifiedStatus, id)
 	}

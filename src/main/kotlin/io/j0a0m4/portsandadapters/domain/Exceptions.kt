@@ -1,4 +1,4 @@
-package io.j0a0m4.portsandadapters.domain.usecases
+package io.j0a0m4.portsandadapters.domain
 
 sealed class DomainException(override val message: String) : Exception()
 
